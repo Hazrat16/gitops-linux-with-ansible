@@ -1,0 +1,9 @@
+---
+nginx_worker_connections: 1024
+nginx_client_max_body_size: 8m
+nginx_proxy_read_timeout: 60
+nginx_ssl_protocols: "TLSv1.2 TLSv1.3"
+nginx_site_name: homelab
+nginx_upstream_name: app_backend
+nginx_dhparam_path: /etc/nginx/ssl/dhparam.pem
+nginx_dhparam_size: 2048

@@ -1,0 +1,52 @@
+---
+- name: Verify nginx role
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Check nginx package is installed
+      ansible.builtin.package:
+        name: nginx
+        state: present
+      check_mode: true
+      register: nginx_pkg
+      failed_when: nginx_pkg.changed
+
+    - name: Validate nginx configuration
+      ansible.builtin.command:
+        cmd: nginx -t
+      register: nginx_test
+      changed_when: false
+      failed_when: nginx_test.rc != 0
+
+    - name: Confirm TLS certificate exists
+      ansible.builtin.stat:
+        path: /etc/nginx/ssl/homelab.local.crt
+      register: tls_cert
+      failed_when: not tls_cert.stat.exists
+
+    - name: Confirm site config is enabled
+      ansible.builtin.stat:
+        path: /etc/nginx/sites-enabled/homelab.conf
+      register: site
+      failed_when: not site.stat.exists
+
+    - name: Read site configuration
+      ansible.builtin.slurp:
+        path: /etc/nginx/sites-enabled/homelab.conf
+      register: site_body
+
+    - name: Assert reverse-proxy settings are present
+      ansible.builtin.assert:
+        that:
+          - "'proxy_pass' in (site_body.content | b64decode)"
+          - "'ssl_certificate' in (site_body.content | b64decode)"
+          - "'listen 443' in (site_body.content | b64decode)"
+
+    - name: Confirm nginx service is running
+      ansible.builtin.service:
+        name: nginx
+        state: started
+      check_mode: true
+      register: nginx_svc
+      failed_when: nginx_svc.changed

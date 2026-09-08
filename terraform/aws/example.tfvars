@@ -1,0 +1,7 @@
+aws_region           = "us-east-1"
+project_prefix       = "homelab"
+instance_type        = "t3.small"
+ssh_public_key_path  = "~/.ssh/homelab-ec2.pub"
+ssh_private_key_path = "~/.ssh/homelab-ec2"
+allowed_ssh_cidr     = "0.0.0.0/0"
+allowed_http_cidr    = "0.0.0.0/0"

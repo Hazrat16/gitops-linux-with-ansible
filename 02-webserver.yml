@@ -1,0 +1,39 @@
+---
+- name: Classroom web demo — Nginx on the web group
+  hosts: web
+  become: true
+  handlers:
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+  tasks:
+    - name: Install Nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Deploy classroom index page
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        owner: www-data
+        group: www-data
+        mode: "0644"
+        content: |
+          <!DOCTYPE html>
+          <html>
+            <head><title>Ansible Classroom Kit</title></head>
+            <body>
+              <h1>Ansible restored this page</h1>
+              <p>Host: {{ inventory_hostname }}</p>
+            </body>
+          </html>
+      notify: Reload nginx
+
+    - name: Enable and start Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true

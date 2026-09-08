@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BACKUP_DIR="{{ backup_dir }}"
+DB_NAME="{{ db_name }}"
+PREFIX="{{ backup_filename_prefix }}"
+RETAIN_DAYS="{{ backup_retain_days }}"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+OUT="${BACKUP_DIR}/${PREFIX}-${STAMP}.sql.gz"
+
+mkdir -p "${BACKUP_DIR}"
+pg_dump -d "${DB_NAME}" | gzip -c > "${OUT}"
+chmod 640 "${OUT}"
+
+find "${BACKUP_DIR}" -type f -name "${PREFIX}-*.sql.gz" -mtime +"${RETAIN_DAYS}" -delete
+touch "${BACKUP_DIR}/.initial-backup-done"
+
+echo "Wrote ${OUT}"

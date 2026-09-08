@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  role_name: common
+  namespace: homelab
+  author: homelab
+  description: Baseline Ubuntu hardening for the GitOps Linux platform
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+dependencies: []

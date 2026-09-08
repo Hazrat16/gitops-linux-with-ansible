@@ -1,0 +1,59 @@
+---
+lab_mode: true
+project_name: gitops-linux-platform
+project_timezone: UTC
+
+# Overridden per class in inventory.ini (AWS private IPs)
+homelab_web_ip: 10.42.1.11
+homelab_app_ip: 127.0.0.1
+homelab_db_ip: 10.42.1.12
+
+app_name: homelab-api
+app_user: homelab
+app_group: homelab
+app_home: /opt/homelab-api
+app_port: 8000
+app_bind: 127.0.0.1
+app_upstream: 127.0.0.1
+app_health_path: /health
+
+db_name: homelab
+db_user: homelab
+db_host: "{{ homelab_db_ip }}"
+db_port: 5432
+db_listen_addresses: "{{ homelab_db_ip }},127.0.0.1"
+postgres_version: "16"
+postgres_app_allowed_cidr: "{{ homelab_web_ip }}/32"
+
+backup_dir: /var/backups/postgresql
+backup_retain_days: 7
+backup_cron_hour: 2
+backup_cron_minute: 15
+
+nginx_server_name: homelab.local
+nginx_health_host: "{{ homelab_web_ip }}"
+tls_provider: selfsigned
+letsencrypt_email: admin@example.com
+tls_cert_dir: /etc/nginx/ssl
+tls_cert_path: "{{ tls_cert_dir }}/{{ nginx_server_name }}.crt"
+tls_key_path: "{{ tls_cert_dir }}/{{ nginx_server_name }}.key"
+
+common_packages:
+  - curl
+  - vim
+  - htop
+  - unzip
+  - ca-certificates
+  - python3
+  - python3-pip
+  - python3-apt
+  - fail2ban
+  - unattended-upgrades
+  - apt-listchanges
+  - ufw
+
+common_ufw_enabled: true
+common_fail2ban_enabled: true
+common_unattended_upgrades: true
+common_ssh_password_authentication: "{{ true if lab_mode | bool else false }}"
+common_ssh_permit_root_login: prohibit-password

@@ -1,0 +1,18 @@
+[Unit]
+Description=Homelab FastAPI platform
+After=network.target
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ app_home }}/app
+EnvironmentFile={{ app_home }}/.env
+ExecStart={{ app_venv }}/bin/uvicorn main:app --host {{ app_bind }} --port {{ app_port }} --workers {{ app_workers }} --log-level {{ app_log_level }}
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

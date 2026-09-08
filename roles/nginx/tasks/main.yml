@@ -1,0 +1,76 @@
+---
+- name: Install nginx and TLS tooling
+  ansible.builtin.apt:
+    name:
+      - nginx
+      - openssl
+      - python3-cryptography
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install certbot when using Let's Encrypt
+  ansible.builtin.apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+  when: tls_provider == "letsencrypt"
+
+- name: Create TLS certificate directory
+  ansible.builtin.file:
+    path: "{{ tls_cert_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Generate self-signed TLS material
+  when: tls_provider == "selfsigned"
+  ansible.builtin.include_tasks: selfsigned.yml
+
+- name: Request Let's Encrypt certificate
+  when: tls_provider == "letsencrypt"
+  ansible.builtin.include_tasks: letsencrypt.yml
+
+- name: Deploy nginx main configuration
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: nginx -t -c %s
+  notify: Reload nginx
+
+- name: Remove default nginx site
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/nginx/sites-enabled/default
+    - /etc/nginx/sites-available/default
+  notify: Reload nginx
+
+- name: Deploy reverse-proxy site
+  ansible.builtin.template:
+    src: homelab.conf.j2
+    dest: "/etc/nginx/sites-available/{{ nginx_site_name }}.conf"
+    owner: root
+    group: root
+    mode: "0644"
+    validate: nginx -t -c /etc/nginx/nginx.conf
+  notify: Reload nginx
+
+- name: Enable reverse-proxy site
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ nginx_site_name }}.conf"
+    dest: "/etc/nginx/sites-enabled/{{ nginx_site_name }}.conf"
+    state: link
+  notify: Reload nginx
+
+- name: Enable and start nginx
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true

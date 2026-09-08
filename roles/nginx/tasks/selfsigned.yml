@@ -1,0 +1,32 @@
+---
+- name: Generate private key for self-signed certificate
+  community.crypto.openssl_privatekey:
+    path: "{{ tls_key_path }}"
+    size: 2048
+    type: RSA
+    owner: root
+    group: root
+    mode: "0640"
+
+- name: Generate CSR for self-signed certificate
+  community.crypto.openssl_csr:
+    path: "{{ tls_cert_dir }}/{{ nginx_server_name }}.csr"
+    privatekey_path: "{{ tls_key_path }}"
+    common_name: "{{ nginx_server_name }}"
+    subject_alt_name:
+      - "DNS:{{ nginx_server_name }}"
+      - "DNS:localhost"
+      - "IP:{{ homelab_web_ip }}"
+      - "IP:127.0.0.1"
+
+- name: Generate self-signed certificate
+  community.crypto.x509_certificate:
+    path: "{{ tls_cert_path }}"
+    privatekey_path: "{{ tls_key_path }}"
+    csr_path: "{{ tls_cert_dir }}/{{ nginx_server_name }}.csr"
+    provider: selfsigned
+    selfsigned_not_after: "+365d"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx

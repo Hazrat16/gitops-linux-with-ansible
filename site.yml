@@ -1,0 +1,48 @@
+---
+- name: Configure database hosts
+  hosts: db
+  become: true
+  roles:
+    - role: common
+    - role: postgres
+    - role: backup
+
+- name: Configure application hosts
+  hosts: app
+  become: true
+  serial: 1
+  max_fail_percentage: 0
+  roles:
+    - role: common
+    - role: app
+  post_tasks:
+    - name: Health-check the app on the instance
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ app_port }}{{ app_health_path }}"
+        method: GET
+        status_code: 200
+      register: app_local_health
+      retries: 10
+      delay: 3
+      until: app_local_health.status | default(0) == 200
+
+- name: Configure web / reverse-proxy hosts
+  hosts: web
+  become: true
+  roles:
+    - role: common
+    - role: nginx
+  post_tasks:
+    - name: Health-check the platform through the reverse proxy
+      ansible.builtin.uri:
+        url: "https://{{ nginx_health_host }}{{ app_health_path }}"
+        method: GET
+        validate_certs: false
+        status_code: 200
+      delegate_to: localhost
+      become: false
+      run_once: true
+      retries: 10
+      delay: 3
+      register: proxy_health
+      until: proxy_health.status | default(0) == 200

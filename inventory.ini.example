@@ -1,0 +1,25 @@
+# Copy to inventory.ini and put the managed-node PRIVATE IPs here.
+# Ansible runs on the control node, so use VPC private IPv4 addresses.
+#
+#   cp inventory.ini.example inventory.ini
+#   nano inventory.ini
+
+[web]
+web1 ansible_host=10.42.1.11
+
+[app]
+web1
+
+[db]
+db1 ansible_host=10.42.1.12
+
+[all:vars]
+ansible_user=ubuntu
+ansible_ssh_private_key_file=/home/ubuntu/keys/homelab-ec2.pem
+ansible_python_interpreter=/usr/bin/python3
+homelab_web_ip=10.42.1.11
+homelab_app_ip=127.0.0.1
+homelab_db_ip=10.42.1.12
+nginx_health_host=10.42.1.11
+db_listen_addresses=10.42.1.12,127.0.0.1
+lab_mode=true

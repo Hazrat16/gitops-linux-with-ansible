@@ -1,0 +1,54 @@
+---
+# Serial rolling deploy: drain one app host from nginx, deploy, health-check, then re-enable.
+- name: Rolling application deploy
+  hosts: app
+  become: true
+  serial: 1
+  max_fail_percentage: 0
+  pre_tasks:
+    - name: Drain this app host from the reverse proxy
+      ansible.builtin.include_role:
+        name: nginx
+        apply:
+          delegate_to: "{{ item }}"
+      vars:
+        draining_app_host: "{{ inventory_hostname }}"
+      loop: "{{ groups['web'] }}"
+
+    - name: Wait briefly for nginx to drop the draining host
+      ansible.builtin.pause:
+        seconds: 2
+  roles:
+    - role: app
+  post_tasks:
+    - name: Health-check the app on the instance after deploy
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ app_port }}{{ app_health_path }}"
+        method: GET
+        status_code: 200
+      register: rolling_local_health
+      retries: 10
+      delay: 3
+      until: rolling_local_health.status | default(0) == 200
+
+    - name: Re-enable this app host on the reverse proxy
+      ansible.builtin.include_role:
+        name: nginx
+        apply:
+          delegate_to: "{{ item }}"
+      vars:
+        draining_app_host: ""
+      loop: "{{ groups['web'] }}"
+
+    - name: Health-check through the reverse proxy
+      ansible.builtin.uri:
+        url: "https://{{ nginx_health_host }}{{ app_health_path }}"
+        method: GET
+        validate_certs: false
+        status_code: 200
+      delegate_to: localhost
+      become: false
+      retries: 10
+      delay: 3
+      register: rolling_proxy_health
+      until: rolling_proxy_health.status | default(0) == 200

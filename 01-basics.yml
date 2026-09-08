@@ -1,0 +1,22 @@
+---
+- name: Classroom basics — facts, ping, hostname
+  hosts: all
+  become: false
+  gather_facts: true
+  tasks:
+    - name: Show operating system
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} is {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}"
+
+    - name: Ping each managed node
+      ansible.builtin.ping:
+
+    - name: Print hostname
+      ansible.builtin.command:
+        cmd: hostname
+      register: node_hostname
+      changed_when: false
+
+    - name: Show hostname
+      ansible.builtin.debug:
+        msg: "{{ node_hostname.stdout }}"

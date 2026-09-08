@@ -1,0 +1,9 @@
+---
+# Copy to vault.yml then encrypt on the control node:
+#   cp group_vars/all/vault.yml.example group_vars/all/vault.yml
+#   echo 'homelab' > .vault_pass
+#   ansible-vault encrypt group_vars/all/vault.yml
+
+vault_db_password: "ChangeMe_db_32chars_minimum_ok"
+vault_app_secret_key: "ChangeMe_app_secret_use_openssl_rand_hex_32"
+vault_backup_encryption_passphrase: "ChangeMe_backup_passphrase"

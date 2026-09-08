@@ -1,0 +1,3 @@
+---
+# App is colocated with Nginx on web1. No extra public port.
+ufw_extra_ports: []

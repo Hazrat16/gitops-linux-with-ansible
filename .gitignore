@@ -1,0 +1,38 @@
+# Ansible
+*.retry
+.vault_pass
+.vault_pass.txt
+inventory.ini
+group_vars/all/vault.yml
+host_vars/*/vault.yml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Molecule
+.molecule/
+roles/*/.molecule/
+roles/*/molecule/*/__pycache__/
+
+# Terraform
+terraform/**/.terraform/
+terraform/**/*.tfstate
+terraform/**/*.tfstate.*
+terraform/**/*.tfvars
+terraform/**/crash.log
+terraform/**/override.tf
+!terraform/**/example.tfvars
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+*~
+
+*.log
+/tmp-ansible/

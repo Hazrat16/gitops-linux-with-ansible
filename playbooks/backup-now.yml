@@ -1,0 +1,25 @@
+---
+- name: Run PostgreSQL backups immediately
+  hosts: db
+  become: true
+  tasks:
+    - name: Execute backup script
+      ansible.builtin.command:
+        cmd: "{{ backup_script_path | default('/usr/local/sbin/pg-backup.sh') }}"
+      become_user: postgres
+      register: backup_now
+      changed_when: true
+
+    - name: Show backup script output
+      ansible.builtin.debug:
+        msg: "{{ backup_now.stdout }}"
+
+    - name: List backup files
+      ansible.builtin.command:
+        cmd: "ls -lh {{ backup_dir }}"
+      register: backup_listing
+      changed_when: false
+
+    - name: Display backup directory
+      ansible.builtin.debug:
+        msg: "{{ backup_listing.stdout_lines }}"

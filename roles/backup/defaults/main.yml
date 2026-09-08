@@ -1,0 +1,4 @@
+---
+backup_user: postgres
+backup_filename_prefix: "{{ db_name }}"
+backup_script_path: /usr/local/sbin/pg-backup.sh

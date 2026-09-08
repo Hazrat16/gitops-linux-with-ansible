@@ -1,0 +1,63 @@
+---
+- name: Verify postgres role
+  hosts: all
+  become: true
+  gather_facts: false
+  vars:
+    db_name: homelab
+    db_user: homelab
+  tasks:
+    - name: Check PostgreSQL package is installed
+      ansible.builtin.package:
+        name: postgresql
+        state: present
+      check_mode: true
+      register: pg_pkg
+      failed_when: pg_pkg.changed
+
+    - name: Confirm PostgreSQL service is running
+      ansible.builtin.service:
+        name: postgresql
+        state: started
+      check_mode: true
+      register: pg_svc
+      failed_when: pg_svc.changed
+
+    - name: Discover PostgreSQL config directory
+      ansible.builtin.find:
+        paths: /etc/postgresql
+        file_type: directory
+        recurse: false
+      register: postgres_version_dirs
+
+    - name: Set PostgreSQL config directory
+      ansible.builtin.set_fact:
+        postgres_config_dir: "{{ postgres_version_dirs.files | map(attribute='path') | sort | last }}/main"
+
+    - name: Read pg_hba.conf
+      ansible.builtin.slurp:
+        src: "{{ postgres_config_dir }}/pg_hba.conf"
+      register: pg_hba
+
+    - name: Assert pg_hba allows the app user
+      ansible.builtin.assert:
+        that:
+          - "'{{ db_name }}' in (pg_hba.content | b64decode)"
+          - "'{{ db_user }}' in (pg_hba.content | b64decode)"
+          - "'scram-sha-256' in (pg_hba.content | b64decode)"
+
+    - name: Confirm application database exists
+      ansible.builtin.command:
+        cmd: psql -d {{ db_name }} -Atc "SELECT current_database()"
+      become_user: postgres
+      register: db_exists
+      changed_when: false
+      failed_when: db_exists.stdout != db_name
+
+    - name: Confirm application role exists
+      ansible.builtin.command:
+        cmd: psql -d postgres -Atc "SELECT rolname FROM pg_roles WHERE rolname = '{{ db_user }}'"
+      become_user: postgres
+      register: role_exists
+      changed_when: false
+      failed_when: role_exists.stdout != db_user

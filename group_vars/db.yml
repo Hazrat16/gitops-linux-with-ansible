@@ -1,0 +1,3 @@
+---
+ufw_extra_ports:
+  - { port: "{{ db_port }}", proto: tcp, src: "{{ homelab_web_ip }}" }

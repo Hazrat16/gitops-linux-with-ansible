@@ -1,0 +1,80 @@
+---
+- name: Install PostgreSQL and Python driver
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+      - acl
+      - locales
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Ensure database locale is generated
+  community.general.locale_gen:
+    name: "{{ postgres_locale }}"
+    state: present
+  when: postgres_locale != "C.UTF-8"
+
+- name: Discover PostgreSQL version directory
+  ansible.builtin.find:
+    paths: /etc/postgresql
+    file_type: directory
+    recurse: false
+  register: postgres_version_dirs
+
+- name: Set PostgreSQL config directory
+  ansible.builtin.set_fact:
+    postgres_config_dir: "{{ postgres_version_dirs.files | map(attribute='path') | sort | last }}/main"
+
+- name: Configure postgresql.conf listen and port
+  ansible.builtin.lineinfile:
+    path: "{{ postgres_config_dir }}/postgresql.conf"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - { regexp: "^#?listen_addresses\\s*=", line: "listen_addresses = '{{ postgres_listen_addresses }}'" }
+    - { regexp: "^#?port\\s*=", line: "port = {{ postgres_port }}" }
+    - { regexp: "^#?max_connections\\s*=", line: "max_connections = {{ postgres_max_connections }}" }
+    - { regexp: "^#?shared_buffers\\s*=", line: "shared_buffers = {{ postgres_shared_buffers }}" }
+  notify: Restart postgresql
+
+- name: Deploy pg_hba rules
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: "{{ postgres_config_dir }}/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  notify: Reload postgresql
+
+- name: Enable and start PostgreSQL
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Flush handlers so auth rules apply before user creation
+  ansible.builtin.meta: flush_handlers
+
+- name: Create application database user
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ vault_db_password }}"
+    role_attr_flags: NOSUPERUSER,NOCREATEDB
+    state: present
+
+- name: Create application database
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: "{{ db_name }}"
+    owner: "{{ db_user }}"
+    encoding: UTF8
+    lc_collate: "{{ postgres_locale }}"
+    lc_ctype: "{{ postgres_locale }}"
+    template: template0
+    state: present

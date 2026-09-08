@@ -1,0 +1,16 @@
+---
+profile: production
+exclude_paths:
+  - .github/
+  - .molecule/
+  - molecule/
+  - terraform/
+  - roles/app/files/homelab-api/.venv/
+
+skip_list:
+  - yaml[line-length]
+  - experimental
+
+warn_list:
+  - risky-file-permissions
+  - galaxy[no-changelog]

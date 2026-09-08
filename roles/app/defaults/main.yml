@@ -1,0 +1,6 @@
+---
+app_python: python3
+app_venv: "{{ app_home }}/.venv"
+app_service_name: homelab-api
+app_workers: 2
+app_log_level: info

@@ -1,0 +1,33 @@
+---
+- name: Create PostgreSQL backup directory
+  ansible.builtin.file:
+    path: "{{ backup_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0750"
+
+- name: Deploy PostgreSQL backup script
+  ansible.builtin.template:
+    src: pg-backup.sh.j2
+    dest: "{{ backup_script_path }}"
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Schedule nightly PostgreSQL backups
+  ansible.builtin.cron:
+    name: "PostgreSQL dump for {{ db_name }}"
+    user: postgres
+    minute: "{{ backup_cron_minute }}"
+    hour: "{{ backup_cron_hour }}"
+    job: "{{ backup_script_path }} >> /var/log/pg-backup.log 2>&1"
+    state: present
+
+- name: Run an initial backup when none exist
+  ansible.builtin.command:
+    cmd: "{{ backup_script_path }}"
+  become: true
+  become_user: postgres
+  args:
+    creates: "{{ backup_dir }}/.initial-backup-done"

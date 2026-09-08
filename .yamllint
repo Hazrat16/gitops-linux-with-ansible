@@ -1,0 +1,23 @@
+---
+extends: default
+
+rules:
+  line-length:
+    max: 160
+    level: warning
+  braces:
+    max-spaces-inside: 1
+  brackets:
+    max-spaces-inside: 1
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: enable
+  document-start: enable
+  truthy:
+    allowed-values: ["true", "false", "yes", "no"]
+
+ignore: |
+  .terraform/
+  terraform/
+  cloud-init/
+  roles/app/files/homelab-api/

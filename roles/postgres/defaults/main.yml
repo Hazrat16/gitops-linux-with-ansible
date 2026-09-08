@@ -1,0 +1,7 @@
+---
+postgres_listen_addresses: "{{ db_listen_addresses }}"
+postgres_port: "{{ db_port }}"
+postgres_max_connections: 100
+postgres_shared_buffers: 128MB
+postgres_app_allowed_cidr: "{{ homelab_web_ip }}/32"
+postgres_locale: en_US.UTF-8
