@@ -12,7 +12,7 @@
         apply:
           delegate_to: "{{ item }}"
       vars:
-        draining_app_host: "{{ inventory_hostname }}"
+        nginx_draining_app_host: "{{ inventory_hostname }}"
       loop: "{{ groups['web'] }}"
 
     - name: Wait briefly for nginx to drop the draining host
@@ -37,7 +37,7 @@
         apply:
           delegate_to: "{{ item }}"
       vars:
-        draining_app_host: ""
+        nginx_draining_app_host: ""
       loop: "{{ groups['web'] }}"
 
     - name: Health-check through the reverse proxy

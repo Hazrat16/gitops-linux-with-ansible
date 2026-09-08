@@ -11,6 +11,6 @@
       --email {{ letsencrypt_email }}
       -d {{ nginx_server_name }}
       --redirect
-  register: certbot_result
-  changed_when: "'Certificate not yet due for renewal' not in certbot_result.stdout"
+  register: nginx_certbot_result
+  changed_when: "'Certificate not yet due for renewal' not in nginx_certbot_result.stdout"
   notify: Reload nginx

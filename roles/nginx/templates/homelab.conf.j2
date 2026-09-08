@@ -1,5 +1,5 @@
 upstream {{ nginx_upstream_name }} {
-    server {{ app_upstream }}:{{ app_port }} max_fails=3 fail_timeout=15s{% if draining_app_host | default('') %} down{% endif %};
+    server {{ app_upstream }}:{{ app_port }} max_fails=3 fail_timeout=15s{% if nginx_draining_app_host | default('') %} down{% endif %};
 }
 
 server {

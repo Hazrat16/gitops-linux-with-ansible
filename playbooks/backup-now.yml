@@ -6,6 +6,7 @@
     - name: Execute backup script
       ansible.builtin.command:
         cmd: "{{ backup_script_path | default('/usr/local/sbin/pg-backup.sh') }}"
+      become: true
       become_user: postgres
       register: backup_now
       changed_when: true
