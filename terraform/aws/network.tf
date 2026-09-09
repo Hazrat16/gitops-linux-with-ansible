@@ -51,7 +51,7 @@ resource "aws_route_table_association" "public" {
 
 resource "aws_security_group" "control" {
   name        = "${var.project_prefix}-control"
-  description = "Ansible control node — SSH from the instructor"
+  description = "Ansible control node - SSH from the instructor"
   vpc_id      = aws_vpc.homelab.id
 
   ingress {
@@ -72,7 +72,7 @@ resource "aws_security_group" "control" {
 
 resource "aws_security_group" "web" {
   name        = "${var.project_prefix}-web"
-  description = "Managed web node — SSH plus HTTP demo"
+  description = "Managed web node - SSH plus HTTP demo"
   vpc_id      = aws_vpc.homelab.id
 
   ingress {
@@ -117,7 +117,7 @@ resource "aws_security_group" "web" {
 
 resource "aws_security_group" "db" {
   name        = "${var.project_prefix}-db"
-  description = "Managed db node — SSH plus PostgreSQL from web"
+  description = "Managed db node - SSH plus PostgreSQL from web"
   vpc_id      = aws_vpc.homelab.id
 
   ingress {
